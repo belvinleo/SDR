@@ -1,0 +1,29 @@
+# Outreach sequence configuration
+# Controls tone per touch and channel alternation
+
+max_touches: 8
+
+# Days between touches (0-indexed)
+touch_delays_days:
+  - 0    # Touch 1: send immediately
+  - 3    # Touch 2: 3 days later
+  - 5    # Touch 3
+  - 7    # Touch 4
+  - 10   # Touch 5
+  - 14   # Touch 6
+  - 21   # Touch 7
+  - 28   # Touch 8 (breakup email)
+
+# Tone guide per touch number (passed to Claude as drafting context)
+touch_tones:
+  "0": "warm and genuinely curious — lead with a specific signal, keep it short"
+  "1": "consultative — offer a insight or stat relevant to their industry"
+  "2": "direct value — one concrete outcome we've delivered for similar companies"
+  "3": "social proof — mention a relevant customer win (without naming names)"
+  "4": "slightly more direct — acknowledge they're busy, make the ask easier"
+  "5": "reframe — approach from a different angle or different pain point"
+  "6": "resource offer — send something useful with no strings attached"
+  "7": "breakup — respectful, leaves door open, low-commitment final ask"
+
+# Channel sequence pattern (email=E, linkedin=L)
+channel_pattern: [E, L, E, L, E, E, L, E]

@@ -1,0 +1,32 @@
+# LLM routing — which model for which task
+# Change models here without touching node code
+
+nodes:
+  scoring:
+    model: claude-haiku-4-5-20251001
+    temperature: 0
+    max_tokens: 500
+    reason: "Cheap structured JSON output — no creativity needed"
+
+  outreach:
+    model: claude-sonnet-4-5
+    temperature: 0.7
+    max_tokens: 1000
+    reason: "Quality is the competitive differentiator here"
+
+  reply_handler:
+    model: claude-haiku-4-5-20251001
+    temperature: 0
+    max_tokens: 300
+    reason: "Simple 5-class classification"
+
+  eval_judge:
+    model: claude-haiku-4-5-20251001
+    temperature: 0
+    max_tokens: 500
+    reason: "Cheap CI eval — not customer-facing"
+
+thresholds:
+  auto_approve: 0.85      # confidence >= this → skip HITL, auto-send
+  qualify: 0.60           # final_score >= this → proceed to outreach
+  max_retry: 3            # max retry attempts per node on failure

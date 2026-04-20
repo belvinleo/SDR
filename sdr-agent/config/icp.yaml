@@ -1,0 +1,55 @@
+# Ideal Customer Profile — controls prospecting and scoring
+# Edit these without touching code
+
+allowed_titles:
+  - VP of Sales
+  - VP of Revenue
+  - Head of Sales
+  - Director of Sales
+  - Chief Revenue Officer
+  - CRO
+  - VP of Marketing
+  - Head of Marketing
+  - Director of Marketing
+  - VP of Growth
+  - Head of Growth
+
+allowed_seniorities:
+  - vp
+  - director
+  - c_suite
+  - head
+
+target_industries:
+  - Software
+  - SaaS
+  - Technology
+  - Fintech
+  - E-commerce
+  - Marketing Technology
+
+target_employee_ranges:
+  - "11,50"
+  - "51,200"
+  - "201,1000"
+
+target_locations:
+  - United States
+  - Canada
+  - United Kingdom
+  - Australia
+
+blocked_domains:
+  - gmail.com
+  - yahoo.com
+  - hotmail.com
+  - outlook.com
+  - icloud.com
+
+# Score weights
+scoring_weights:
+  fit: 0.50
+  intent: 0.30
+  urgency: 0.20
+
+qualification_threshold: 0.60

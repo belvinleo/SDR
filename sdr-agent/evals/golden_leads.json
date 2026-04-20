@@ -1,0 +1,72 @@
+[
+  {
+    "lead": {
+      "lead_id": "golden-001",
+      "email": "sarah@techcorp.com",
+      "name": "Sarah Chen",
+      "first_name": "Sarah",
+      "last_name": "Chen",
+      "company": "TechCorp",
+      "domain": "techcorp.com",
+      "title": "VP of Sales",
+      "linkedin_url": "https://linkedin.com/in/sarahchen"
+    },
+    "mock_signals": {
+      "recent_funding": "TechCorp raised $20M Series B in January 2025 to expand sales team",
+      "leadership_hiring": ["Head of Sales Ops", "Director of Revenue"],
+      "tech_stack": ["Salesforce", "Outreach", "ZoomInfo"],
+      "employee_count": 150,
+      "industry": "B2B SaaS"
+    },
+    "expected": {
+      "qualified": true,
+      "min_final_score": 0.7,
+      "email_contains_signal": true,
+      "min_email_quality_score": 4
+    }
+  },
+  {
+    "lead": {
+      "lead_id": "golden-002",
+      "email": "john@gmail.com",
+      "name": "John Smith",
+      "first_name": "John",
+      "last_name": "Smith",
+      "company": "Unknown",
+      "domain": "gmail.com",
+      "title": "Intern",
+      "linkedin_url": null
+    },
+    "mock_signals": {},
+    "expected": {
+      "qualified": false,
+      "disqualification_reason_contains": "blocked_domain"
+    }
+  },
+  {
+    "lead": {
+      "lead_id": "golden-003",
+      "email": "mike@growthco.io",
+      "name": "Mike Patel",
+      "first_name": "Mike",
+      "last_name": "Patel",
+      "company": "GrowthCo",
+      "domain": "growthco.io",
+      "title": "Head of Marketing",
+      "linkedin_url": "https://linkedin.com/in/mikepatel"
+    },
+    "mock_signals": {
+      "recent_funding": null,
+      "leadership_hiring": ["VP of Demand Gen"],
+      "tech_stack": ["HubSpot", "Segment"],
+      "employee_count": 45,
+      "industry": "Marketing Tech"
+    },
+    "expected": {
+      "qualified": true,
+      "min_final_score": 0.55,
+      "email_contains_signal": true,
+      "min_email_quality_score": 3
+    }
+  }
+]
