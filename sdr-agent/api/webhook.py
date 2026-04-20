@@ -3,6 +3,7 @@ Webhook router — triggers the SDR pipeline for a new lead.
 Accepts lead data as JSON, validates required fields, kicks off LangGraph run.
 """
 from __future__ import annotations
+from typing import List
 import uuid, structlog
 from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends
 from pydantic import BaseModel, EmailStr
@@ -23,6 +24,10 @@ class LeadPayload(BaseModel):
     domain: str
     title: str
     linkedin_url: str | None = None
+
+
+class BulkLeadPayload(BaseModel):
+    leads: List[LeadPayload]
 
 
 async def _run_pipeline(graph, state: dict) -> None:
@@ -130,3 +135,63 @@ async def lead_status(lead_id: str):
         "last_touch":   touch,
         "touch_history": history,
     }
+
+
+@router.post("/lead/bulk")
+async def ingest_bulk_leads(
+    payload: BulkLeadPayload,
+    background_tasks: BackgroundTasks,
+    graph=Depends(get_graph),
+):
+    """
+    Ingest multiple leads at once (CSV import).
+    Each lead is deduplicated and started as a background pipeline.
+    Returns counts of imported vs skipped.
+    """
+    imported = 0
+    skipped = 0
+    errors = 0
+
+    for lead_data in payload.leads:
+        try:
+            # Deduplicate by email
+            existing = await get_lead_by_email(str(lead_data.email))
+            if existing and existing["status"] not in ("complete", "disqualified", "replied_not_interested"):
+                skipped += 1
+                continue
+
+            lead_id = str(uuid.uuid4())
+            first_name = lead_data.first_name or lead_data.name.split()[0]
+            last_name = lead_data.last_name or " ".join(lead_data.name.split()[1:])
+
+            initial_state = {
+                "lead_id":      lead_id,
+                "email":        str(lead_data.email),
+                "name":         lead_data.name,
+                "first_name":   first_name,
+                "last_name":    last_name,
+                "company":      lead_data.company,
+                "domain":       lead_data.domain,
+                "title":        lead_data.title,
+                "linkedin_url": lead_data.linkedin_url,
+                "signals": {}, "firmographics": {}, "email_verified": False,
+                "fit_score": 0.0, "intent_score": 0.0, "final_score": 0.0,
+                "qualified": False, "disqualification_reason": None,
+                "channel": "email", "draft_subject": None, "draft_body": "",
+                "confidence": 0.0, "approved": False, "touch_number": 0,
+                "thread_id": None, "scheduled_at": None,
+                "reply_raw": None, "reply_status": None,
+                "meeting_booked": False, "hitl_required": True,
+                "error": None, "retry_count": 0,
+            }
+
+            await insert_lead_initial(initial_state)
+            background_tasks.add_task(_run_pipeline, graph, initial_state)
+            imported += 1
+
+        except Exception as e:
+            log.error("bulk_import.lead_failed", email=lead_data.email, error=str(e))
+            errors += 1
+
+    log.info("bulk_import.complete", imported=imported, skipped=skipped, errors=errors)
+    return {"imported": imported, "skipped": skipped, "errors": errors}

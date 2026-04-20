@@ -8,11 +8,16 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 load_dotenv()
 
 from memory.pg_checkpointer import get_checkpointer
 from graph.supervisor import build_graph
+from api.auth import router as auth_router
+from api.auth_middleware import JWTMiddleware
+from api.scheduler import resume_scheduled_leads
+from api.workspace import router as workspace_router
 from api.webhook import router as webhook_router
 from api.hitl import router as hitl_router
 from api.leads import router as leads_router
@@ -34,14 +39,30 @@ log = structlog.get_logger()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Startup: create DB tables, build LangGraph. Shutdown: nothing to clean up."""
+    """Startup: create DB tables, build LangGraph, start scheduler."""
     log.info("app.startup")
     await create_tables()
     checkpointer = get_checkpointer()
     graph = build_graph(checkpointer)
     set_graph(graph)
+
+    # Start follow-up scheduler — fires every 15 minutes
+    scheduler = AsyncIOScheduler()
+    scheduler.add_job(
+        resume_scheduled_leads,
+        trigger="interval",
+        minutes=15,
+        args=[graph],
+        id="follow_up_scheduler",
+        replace_existing=True,
+    )
+    scheduler.start()
+    log.info("app.scheduler_started")
     log.info("app.graph_ready")
+
     yield
+
+    scheduler.shutdown(wait=False)
     log.info("app.shutdown")
 
 
@@ -65,9 +86,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(webhook_router, prefix="/webhook", tags=["webhook"])
-app.include_router(hitl_router,    prefix="/hitl",    tags=["hitl"])
-app.include_router(leads_router,   prefix="/leads",   tags=["leads"])
+# JWT middleware — must be added after CORS (middleware order matters)
+app.add_middleware(JWTMiddleware)
+
+app.include_router(auth_router,      prefix="/auth",      tags=["auth"])
+app.include_router(workspace_router, prefix="/workspace", tags=["workspace"])
+app.include_router(webhook_router,   prefix="/webhook",   tags=["webhook"])
+app.include_router(hitl_router,      prefix="/hitl",      tags=["hitl"])
+app.include_router(leads_router,     prefix="/leads",     tags=["leads"])
 
 
 @app.get("/health")

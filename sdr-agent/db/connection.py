@@ -62,4 +62,11 @@ async def create_tables() -> None:
             CREATE UNIQUE INDEX IF NOT EXISTS leads_email_idx ON leads (email);
             CREATE INDEX IF NOT EXISTS leads_status_idx ON leads (status);
         """)
+    
+    from db.users import create_users_table
+    await create_users_table()
+    
+    from db.workspace_config import create_workspace_config_table
+    await create_workspace_config_table()
+    
     log.info("db.tables_ready")
