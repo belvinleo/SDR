@@ -23,8 +23,8 @@ class JWTMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         path = request.url.path
 
-        # Skip auth for public routes
-        if any(path.startswith(p) for p in UNPROTECTED_PREFIXES):
+        # Skip auth for public routes and CORS preflights
+        if request.method == "OPTIONS" or any(path.startswith(p) for p in UNPROTECTED_PREFIXES):
             return await call_next(request)
 
         # Extract Bearer token

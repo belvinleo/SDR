@@ -55,12 +55,15 @@ async def create_tables() -> None:
                 firmographics   JSONB DEFAULT '{}',
                 disqualification_reason TEXT,
                 last_contacted_at TIMESTAMPTZ,
+                scheduled_at    TIMESTAMPTZ,
                 created_at      TIMESTAMPTZ DEFAULT NOW(),
                 updated_at      TIMESTAMPTZ DEFAULT NOW()
             );
 
             CREATE UNIQUE INDEX IF NOT EXISTS leads_email_idx ON leads (email);
             CREATE INDEX IF NOT EXISTS leads_status_idx ON leads (status);
+            
+            ALTER TABLE leads ADD COLUMN IF NOT EXISTS scheduled_at TIMESTAMPTZ;
         """)
     
     from db.users import create_users_table

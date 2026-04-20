@@ -11,6 +11,7 @@ from pydantic import BaseModel, EmailStr
 from passlib.context import CryptContext
 from jose import jwt
 import asyncpg
+import bcrypt
 
 from db.users import create_user, get_user_by_email
 
@@ -25,7 +26,8 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def _hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+    safe_password = password[:72]
+    return pwd_context.hash(safe_password)
 
 
 def _verify_password(plain: str, hashed: str) -> bool:
@@ -85,3 +87,6 @@ async def login(payload: LoginRequest):
     token = _create_token(str(user["id"]), str(user["workspace_id"]))
     log.info("auth.login", email=payload.email)
     return {"access_token": token, "token_type": "bearer"}
+
+if not hasattr(bcrypt, "__about__"):
+    bcrypt.__about__ = type("about", (), {"__version__": "4.0.0"})

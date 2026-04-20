@@ -73,9 +73,11 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# Allow the Vite dev server (5173) and preview (4173).
-# Override via ALLOWED_ORIGINS env var for production.
-_origins_raw = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:4173")
+# JWT middleware
+app.add_middleware(JWTMiddleware)
+
+# CORS middleware — added LAST so it is the outermost layer (handles preflight)
+_origins_raw = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:4173,http://localhost:8080")
 ALLOWED_ORIGINS = [o.strip() for o in _origins_raw.split(",") if o.strip()]
 
 app.add_middleware(
@@ -85,9 +87,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# JWT middleware — must be added after CORS (middleware order matters)
-app.add_middleware(JWTMiddleware)
 
 app.include_router(auth_router,      prefix="/auth",      tags=["auth"])
 app.include_router(workspace_router, prefix="/workspace", tags=["workspace"])

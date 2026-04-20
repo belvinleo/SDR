@@ -19,7 +19,6 @@ router = APIRouter()
 
 
 def _get_workspace_id(request: Request) -> str:
-    """Extract workspace_id from JWT middleware state."""
     workspace_id = getattr(request.state, "workspace_id", None)
     if not workspace_id:
         raise HTTPException(status_code=401, detail="Not authenticated")
